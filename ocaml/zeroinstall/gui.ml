@@ -288,11 +288,11 @@ let list_impls config (results:Solver.result) iface =
           []
 
 (** Download the archives. Called when the user clicks the 'Run' button. *)
-let download_archives (fetcher:Fetch.fetcher) distro = function
+let download_archives ~feed_provider driver = function
   | (false, _) -> raise_safe "Can't download archives; solve failed!"
   | (true, results) ->
       let sels = results#get_selections in
-      match_lwt fetcher#download_selections ~distro sels with
+      match_lwt driver#download_selections ~include_packages:true ~feed_provider sels with
       | `success -> Lwt.return (`String "ok")
       | `aborted_by_user -> Lwt.return (`String "aborted-by-user")
 
@@ -360,7 +360,7 @@ let get_selections_gui (driver:Driver.driver) ?test_callback ?(systray=false) mo
       | [] -> (
           match mode with
           | `Select_only -> Lwt.return (`String "ok")
-          | `Download_only | `Select_for_run -> download_archives fetcher distro !results
+          | `Download_only | `Select_for_run -> download_archives ~feed_provider:!feed_provider driver !results
       )
       | json -> raise_safe "download-archives: invalid request: %s" (Yojson.Basic.to_string (`List json))
     );
@@ -428,9 +428,8 @@ let get_selections_gui (driver:Driver.driver) ?test_callback ?(systray=false) mo
      * - Make Distro delay downloads when invoked via Driver but not when invoked directly. Also messy.
      *)
     let rec loop force =
-      feed_provider := new Feed_cache.feed_provider config distro;
       let driver = new Driver.driver config fetcher distro slave in
-      let (ready, results) = driver#solve_with_downloads ~feed_provider:!feed_provider ~watcher reqs ~force ~update_local:true in
+      let (ready, results, _feed_provider) = driver#solve_with_downloads ~watcher reqs ~force ~update_local:true in
       let response =
         slave#invoke (`List [`String "run-gui"]) (function
           | `List [`String "ok"] -> assert ready; `Success results#get_selections

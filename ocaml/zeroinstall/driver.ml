@@ -5,6 +5,7 @@
 open General
 open Support.Common
 
+module FeedAttr = Constants.FeedAttr
 module U = Support.Utils
 let (>|=) = Lwt.(>|=)
 
@@ -20,8 +21,16 @@ type watcher = <
   update : bool * Solver.result -> unit;
 >
 
+(* Turn a list of tasks into a list of their resolutions. *)
+let rec collect_ex = function
+  | [] -> Lwt.return []
+  | x :: xs ->
+      lwt result = x in
+      lwt results = collect_ex xs in
+      result :: results |> Lwt.return
+
 class driver config (fetcher:Fetch.fetcher) distro (slave:Python.slave) =
-  object
+  object (self)
     (** Run the solver, then download any feeds that are missing or that need to be
         updated. Each time a new feed is imported into the cache, the solver is run
         again, possibly adding new downloads.
@@ -31,7 +40,8 @@ class driver config (fetcher:Fetch.fetcher) distro (slave:Python.slave) =
         @param force re-download all feeds, even if we're ready to run (implies update_local)
         @param watcher notify of each partial solve (used by the GUI to show the current state)
         @param update_local fetch PackageKit feeds even if we're ready to run *)
-    method solve_with_downloads ?feed_provider ?(watcher:watcher option) requirements ~force ~update_local : (bool * Solver.result) =
+    method solve_with_downloads ?feed_provider ?(watcher:watcher option) requirements
+                                ~force ~update_local : (bool * Solver.result * Feed_cache.feed_provider) =
       let force = ref force in
       let seen = ref StringSet.empty in
       let downloads_in_progress = ref StringMap.empty in
@@ -156,7 +166,8 @@ class driver config (fetcher:Fetch.fetcher) distro (slave:Python.slave) =
                 (* Run the solve again with the new information. *)
                 loop ~try_quick_exit:false
       in
-      loop ~try_quick_exit:(not (!force || update_local))
+      let (ready, result) = loop ~try_quick_exit:(not (!force || update_local)) in
+      (ready, result, feed_provider)
 
     (** Find the best selections for these requirements and return them if available without downloading. 
      * Returns None if we need to refresh feeds or download any implementations. *)
@@ -171,6 +182,111 @@ class driver config (fetcher:Fetch.fetcher) distro (slave:Python.slave) =
             None        (* Need to download to get the new selections *)
       | (false, _) ->
           None          (* Need to refresh before we can solve *)
+
+    (** Convenience wrapper for Fetch.download_and_import_feed that just gives the final result.
+     * If the mirror replies first, but the primary succeeds, we return the primary.
+     *)
+    method download_and_import_feed url =
+      let `remote_feed feed_url = url in
+      let update = ref None in
+      let rec wait_for (result:Fetch.fetch_feed_response Lwt.t) =
+        match_lwt result with
+        | `update (feed, None) -> `success feed |> Lwt.return
+        | `update (feed, Some next) ->
+            update := Some feed;
+            wait_for next
+        | `aborted_by_user -> Lwt.return `aborted_by_user
+        | `no_update -> (
+            match !update with
+            | None -> Lwt.return `no_update
+            | Some update -> Lwt.return (`success update)  (* Use the previous partial update *)
+        )
+        | `problem (msg, None) -> (
+            match !update with
+            | None -> raise_safe "%s" msg
+            | Some update ->
+                log_warning "Feed %s: %s" feed_url msg;
+                Lwt.return (`success update)  (* Use the previous partial update *)
+        )
+        | `problem (msg, Some next) ->
+            log_warning "Feed '%s': %s" feed_url msg;
+            wait_for next in
+
+      wait_for @@ fetcher#download_and_import_feed url
+
+    (** Ensure all selections are cached, downloading any that are missing.
+        If [include_packages] is given then distribution packages are also installed, otherwise
+        they are ignored. *)
+    method download_selections ~include_packages ~(feed_provider:Feed_cache.feed_provider) sels : [ `success | `aborted_by_user ] Lwt.t =
+      let missing =
+        let maybe_distro = if include_packages then Some distro else None in
+        Selections.get_unavailable_selections config ?distro:maybe_distro sels in
+      if missing = [] then (
+        Lwt.return `success
+      ) else if config.network_use = Offline then (
+        let format_sel sel =
+          ZI.get_attribute FeedAttr.interface sel ^ " " ^ ZI.get_attribute FeedAttr.version sel in
+        let items = missing |> List.map format_sel |> String.concat ", " in
+        raise_safe "Can't download as in offline mode:\n%s" items
+      ) else (
+        (* We're missing some. For each one, get the feed it came from
+         * and find the corresponding <implementation> in that. This will
+         * tell us where to get it from.
+         * Note: we look for an implementation with the same ID. Maybe we
+         * should check it has the same digest(s) too?
+         *)
+        let impl_of_sel sel =
+          let id = ZI.get_attribute FeedAttr.id sel in
+          let feed_url =
+            match ZI.get_attribute_opt FeedAttr.from_feed sel with
+            | Some feed -> feed
+            | None -> ZI.get_attribute FeedAttr.interface sel in
+
+          let parsed_feed_url = Feed_cache.parse_feed_url feed_url in
+          let get_impl () : Feed.implementation option =
+            match parsed_feed_url with
+            | `distribution_feed master -> (
+                match feed_provider#get_feed master with
+                | None -> None
+                | Some (master_feed, _) ->
+                    match feed_provider#get_distro_impls master_feed with
+                    | None -> None
+                    | Some (impls, _) ->
+                        try Some (impls |> List.find (fun impl -> Feed.get_attr_ex FeedAttr.id impl = id))
+                        with Not_found -> None
+            )
+            | `remote_feed url | `local_feed url ->
+                match feed_provider#get_feed url with
+                | Some (feed, _) -> (
+                    try Some (StringMap.find id feed.Feed.implementations)
+                    with Not_found -> None
+                )
+                | _ -> None in
+
+          match get_impl (), parsed_feed_url with
+          | Some impl, _ -> `success impl |> Lwt.return
+          | None, `distribution_feed _ -> raise_safe "Can't find requested package implementation %s:%s" feed_url id (* TODO fetch candidates? *)
+          | None, `local_feed path -> raise_safe "Implementation '%s' not found in local feed '%s'" id path
+          | None, (`remote_feed _ as parsed_feed_url) ->
+              match_lwt self#download_and_import_feed parsed_feed_url with
+              | `aborted_by_user -> Lwt.return `aborted_by_user
+              | `no_update -> raise_safe "Failed to update feed '%s'" feed_url
+              | `success new_root ->
+                  Feed.parse config.system new_root None |> feed_provider#replace_feed feed_url;
+                  match get_impl () with
+                  | None -> raise_safe "Failed to download feed '%s'" feed_url
+                  | Some impl -> `success impl |> Lwt.return in
+
+        lwt results = missing |> List.map impl_of_sel |> collect_ex in
+        let impls : Feed.implementation list ref = ref [] in
+        let aborted = ref false in
+        results |> List.iter (function
+          | `success feed -> impls := feed :: !impls
+          | `aborted_by_user -> aborted := true
+          | `problem msg -> raise_safe "%s" msg);
+        if !aborted then Lwt.return `aborted_by_user
+        else fetcher#download_impls !impls
+      )
 
     method fetcher = fetcher
     method config = config
