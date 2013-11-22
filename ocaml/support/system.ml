@@ -95,6 +95,7 @@ module RealSystem (U : UnixType) =
         method rmdir = Unix.rmdir
         method getcwd = Sys.getcwd ()
         method chdir = Unix.chdir
+        method record_x _path = ()
         method chmod = Unix.chmod
         method rename = Unix.rename
         method set_mtime = set_mtime

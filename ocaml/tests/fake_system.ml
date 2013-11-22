@@ -196,6 +196,7 @@ class fake_system tmpdir =
       if StringMap.mem path !extra_files then None    (* Not a link *)
       else real_system#readlink (check_read path)
 
+    method record_x path = real_system#record_x (check_write path)
     method chmod path mode = real_system#chmod (check_write path) mode
 
     method file_exists path =

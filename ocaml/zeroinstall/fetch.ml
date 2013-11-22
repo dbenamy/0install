@@ -483,7 +483,11 @@ class fetcher config trust_db (downloader:Downloader.downloader) (distro:Distro.
    *)
   let download_impl_internal ~may_use_mirror impl required_digest retrieval_method =
     let need_rm_tmpdir = ref true in
-    let tmpdir = Stores.make_tmp_dir config.system#bypass_dryrun config.stores in
+
+    (* Even in dry-run mode, we really do unpack the archive. *)
+    let system = Xbit.xbit_system config.system#bypass_dryrun in
+
+    let tmpdir = Stores.make_tmp_dir system config.stores in
 
     (** Takes a cross-platform relative path (i.e using forward slashes, even on windows)
         and returns the absolute, platform-native version of the path.
@@ -520,7 +524,6 @@ class fetcher config trust_db (downloader:Downloader.downloader) (distro:Distro.
        * a future that will perform the extraction step. These futures are evaluated in sequence. *)
       let switch = Lwt_switch.create () in
       try_lwt
-        let real_system = system#bypass_dryrun in    (* We really do extract to the temporary directory *)
         let downloads = retrieval_method |> List.map (function
           | DownloadStep {url; size; download_type = ArchiveDownload archive_info} ->
               (url, archive_info) |> download_archive ~switch ~may_use_mirror ?size ~feed (fun tmpfile ->
@@ -530,11 +533,11 @@ class fetcher config trust_db (downloader:Downloader.downloader) (distro:Distro.
                   | None -> tmpdir
                   | Some dest ->
                       let basedir = native_path_within_base dest in
-                      U.makedirs real_system basedir 0o755;
+                      U.makedirs system basedir 0o755;
                       basedir in
                 let mime_type = mime_type |? lazy (Archive.type_from_url url) in
                 try_lwt
-                  Archive.unpack_over {config with system = system#bypass_dryrun}
+                  Archive.unpack_over {config with system}
                     ~archive:tmpfile ~tmpdir:(Filename.dirname tmpdir)
                     ~destdir:basedir ?extract ~mime_type
                 with Safe_exception _ as ex ->
@@ -543,17 +546,17 @@ class fetcher config trust_db (downloader:Downloader.downloader) (distro:Distro.
           | DownloadStep {url; size; download_type = FileDownload dest} ->
               url |> download_file ~switch ?size ~start_offset:Int64.zero ~feed ~may_use_mirror:false (fun tmpfile ->
                 let dest = native_path_within_base dest in
-                U.makedirs real_system (Filename.dirname dest) 0o755;
-                U.copy_file real_system tmpfile dest 0o644;
-                system#bypass_dryrun#set_mtime dest 0.0;
+                U.makedirs system (Filename.dirname dest) 0o755;
+                U.copy_file system tmpfile dest 0o644;
+                system#set_mtime dest 0.0;
                 Lwt.return ()
               )
           | RenameStep {rename_source; rename_dest} -> lazy (
               let source = native_path_within_base rename_source in
               let dest = native_path_within_base rename_dest in
               try
-                U.makedirs real_system (Filename.dirname dest) 0o755;
-                real_system#rename source dest;
+                U.makedirs system (Filename.dirname dest) 0o755;
+                system#rename source dest;
                 Lwt.return ()
               with Unix.Unix_error (Unix.ENOENT, _, _) as ex ->
                 log_info ~ex "Failed to rename %s -> %s" source dest;
@@ -561,7 +564,7 @@ class fetcher config trust_db (downloader:Downloader.downloader) (distro:Distro.
           ) |> Lwt.return
           | RemoveStep {remove} -> lazy (
               let path = native_path_within_base remove in
-              U.rmtree ~even_if_locked:true real_system path;
+              U.rmtree ~even_if_locked:true system path;
               Lwt.return ()
           ) |> Lwt.return
         ) in
@@ -572,7 +575,7 @@ class fetcher config trust_db (downloader:Downloader.downloader) (distro:Distro.
           Lazy.force fn
         ) in
 
-        lwt () = Stores.check_manifest_and_rename {config with system = system#bypass_dryrun} required_digest tmpdir in
+        lwt () = Stores.check_manifest_and_rename {config with system} required_digest tmpdir in
         need_rm_tmpdir := false;
         Lwt.return `success
       with ex ->
@@ -585,7 +588,7 @@ class fetcher config trust_db (downloader:Downloader.downloader) (distro:Distro.
       try
         if !need_rm_tmpdir then (
           log_info "Removing temporary directory '%s'" tmpdir;
-          U.rmtree ~even_if_locked:true config.system#bypass_dryrun tmpdir
+          U.rmtree ~even_if_locked:true system tmpdir
         );
         Lwt.return ()
       with ex ->

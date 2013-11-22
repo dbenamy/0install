@@ -73,6 +73,9 @@ class type system =
     method hardlink : filepath -> filepath -> unit
     method rename : filepath -> filepath -> unit
 
+    (** Used on Windows to notify us of executable files (see [Zeroinstall.Xbit]) *)
+    method record_x : filepath -> unit
+
     method readdir : filepath -> string array result
     method chmod : filepath -> Unix.file_perm -> unit
     method set_mtime : filepath -> float -> unit

@@ -55,6 +55,7 @@ class dryrun_system (underlying:system) =
 
     (* Trivial operations: ignore *)
     method set_mtime _path _mtime = ()
+    method record_x _path         = ()
     method chmod _path _mode      = ()
 
     (* Keep track of the directories we would have created, since we often check them soon afterwards. *)

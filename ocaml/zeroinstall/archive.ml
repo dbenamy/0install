@@ -64,8 +64,10 @@ type compression = Bzip2 | Gzip | Lzma | Xz | Uncompressed
 
 let make_command = U.make_command
 
+let unfiltered x = Lwt_io.read x
+
 (** Run a command in a subprocess. If it returns an error code, generate an exception containing its stdout and stderr. *)
-let run_command ?cwd system args =
+let run_command ?cwd ?(filter_stdout=unfiltered) system args =
   (* Some zip archives are missing timezone information; force consistent results *)
   let child_env = Array.append system#environment [| "TZ=GMT" |] in
 
@@ -82,7 +84,7 @@ let run_command ?cwd system args =
             system#chdir cwd;
             Lwt_process.open_process_full ~env:child_env command) in
   try_lwt
-    lwt stdout = Lwt_io.read child#stdout
+    lwt stdout = filter_stdout child#stdout
     and stderr = Lwt_io.read child#stderr
     and () = Lwt_io.close child#stdin in
 
@@ -132,7 +134,7 @@ let extract_tar config ~dstdir ?extract ~compression archive =
 
   lwt tar_flavour = get_tar_flavour system in
 
-  let ext_cmd = ["tar"; "-xf"; archive; "-C"; dstdir] @
+  let ext_cmd = [archive; "-C"; dstdir] @
 
     begin match tar_flavour with
     | `gnu_tar -> ["--no-same-owner"; "--no-same-permissions"]
@@ -155,7 +157,30 @@ let extract_tar config ~dstdir ?extract ~compression archive =
     | Some extract -> [extract]
     | None -> [] end in
 
-  run_command system ext_cmd
+  if on_windows then (
+    (* Run tar in verbose mode and parse the X bits, since they don't get stored *)
+    let re_executable = Str.regexp "^\\(-..x......\\|......x...\\|.........x\\) +[^ ]+ +[^ ]+ +[^ ]+ +[^ ]+ +\\(.*\\)$" in
+    let process_x from_tar =
+      lwt () =
+        try_lwt
+          while_lwt true do
+            lwt line = Lwt_io.read_line from_tar in
+            if Str.string_match re_executable line 0 then (
+              let path = Str.matched_group 2 line in
+              let path = if U.starts_with path "./" then U.string_tail path 2 else path in
+              for i = 0 to String.length path - 1 do
+                if path.[i] = '/' then path.[i] <- '\\'
+              done;
+              system#record_x (dstdir +/ path)
+            );
+            Lwt.return ()
+          done
+        with End_of_file -> Lwt.return () in
+      Lwt.return "" in
+    run_command ~filter_stdout:process_x system ("tar" :: "-xvvf" :: ext_cmd)
+  ) else (
+    run_command system ("tar" :: "-xf" :: ext_cmd)
+  )
 
 let extract_gem config ~dstdir ?extract archive =
   let payload = "data.tar.gz" in

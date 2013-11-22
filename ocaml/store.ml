@@ -28,6 +28,7 @@ let add_archive options ~digest ?extract archive =
     (fun tmpdir -> U.rmtree ~even_if_locked:true config.system tmpdir)
     (Zeroinstall.Stores.make_tmp_dir config.system config.stores)
     (fun tmpdir ->
+      let config = {config with system = Zeroinstall.Xbit.xbit_system config.system} in
       let destdir = U.make_tmp_dir config.system ~prefix:"0store-add-" tmpdir in
       Lwt_main.run @@ A.unpack_over config ~archive ~tmpdir ~destdir ?extract ~mime_type;
       Lwt_main.run @@ Zeroinstall.Stores.check_manifest_and_rename config digest destdir
