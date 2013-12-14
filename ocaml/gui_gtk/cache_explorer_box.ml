@@ -306,8 +306,7 @@ let open_cache_explorer config =
           | x::xs ->
               let dir = CacheModel.get model ~row:x ~column:impl_dir_col in
               lwt () = Lwt_preemptive.detach (U.rmtree ~even_if_locked:true config.system) dir in
-              let removed = CacheModel.remove model x in
-              assert removed;
+              CacheModel.remove model x |> ignore;
               loop xs in
         match_lwt confirm_deletion ~parent:dialog (List.length iters) with
         | `delete -> loop iters
@@ -355,6 +354,7 @@ let open_cache_explorer config =
   dialog#show ();
 
   (* Make sure the GUI appears before we start the (slow) scan *)
+  Gdk.Window.set_cursor dialog#misc#window (Lazy.force Gtk_utils.busy_cursor);
   Gdk.X.flush ();
 
   (* Populate model *)
@@ -422,6 +422,7 @@ let open_cache_explorer config =
 
   (* Sort by size initially *)
   sorted_model#set_sort_column_id size_col.GTree.index `DESCENDING;
+  Gdk.Window.set_cursor dialog#misc#window (Lazy.force Gtk_utils.default_cursor);
 
   (* Update the details panel when the selection changes *)
   selection#set_mode `MULTIPLE;

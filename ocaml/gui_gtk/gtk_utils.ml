@@ -54,3 +54,11 @@ let default_cursor = lazy (Gdk.Cursor.create `LEFT_PTR)
  * point (even in the Python).
  * See: http://mail.gnome.org/archives/gtk-list/2007-May/msg00100.html *)
 let busy_cursor = lazy (Gdk.Cursor.create `WATCH)
+
+let pango_escape s =
+  s |> Str.global_substitute (Str.regexp "[&<]") (fun s ->
+    match Str.matched_string s with
+    | "&" -> "&amp;"
+    | "<" -> "&lt;"
+    | _ -> assert false
+  )

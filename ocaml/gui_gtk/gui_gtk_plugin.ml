@@ -49,8 +49,7 @@ let make_gtk_ui (slave:Python.slave) =
         solver_boxes <- solver_boxes |> List.filter ((<>) box);
         Lwt.return ()
 
-    method open_app_list_box =
-      slave#invoke "open-app-list-box" [] Zeroinstall.Python.expect_null
+    method open_app_list_box = App_list_box.create config ~gui:self ~trust_db
 
     method open_add_box url =
       slave#invoke "open-add-box" [`String url] Zeroinstall.Python.expect_null
