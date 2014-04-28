@@ -558,91 +558,46 @@ module Mac = struct
       val check_host_python = false     (* Darwin will do it. TODO is this right? *)
 
       method! private get_package_impls query =
-        (* Start with impls from PackageKit *)
-        (* super#get_package_impls query; *)
-
-        log_debug "is_valid_package_name: %b" (self#is_valid_package_name "blah");
-
-        (* Check the local package database *)
-        let package_name = query.package_name in
-        log_debug "Looking in homebrew for %s" package_name;
-        
-        (* Try darwin first *)
+        log_debug "Looking in homebrew for %s" query.package_name;
         super#get_package_impls query; (* Darwin (if I understand right) *)
         if (StringMap.is_empty !(query.results)) then (
-          log_debug "Darwin didn't find package %s." package_name
+          log_debug "Darwin didn't find it."
         );
         self#get_homebrew_impls query;
         if (StringMap.is_empty !(query.results)) then (
           log_debug "Still nothing after Homebrew."
         );
-
-        (* let num_darwin_results = List.length query.results in *)
-        (* log_debug "Darwin found %d impls." num_darwin_results; *)
-        (* if num_darwin_results == 0 then ( *)
-        (* if (StringMap.is_empty query.results) then ( *)
-          (* log_debug "Darwin didn't find package '%s'. Checking Homebrew." package_name *)
-          (* let num_brew_results = (List.length query.results) - num_darwin_results in *)
-          (* log_debug "Darwin found %d impls." num_brew_results *)
-          (* if query.results.is_empty then ( *)
-            (* log_debug "Homebrew didn't find it either." *)
-          (* ) else ( *)
-            (* log_debug "Homebrew found it." *)
-          (* ) *)
-        (* ) *)
         ()
 
       method private get_homebrew_impls query =
-        ()
-(*
-        let items = get_entries () in
-        match StringMap.find package_name items with
-        | None -> ()
-        | Some version ->
-            let entry = package_name ^ "-" ^ version in
-            let desc_path = packages_dir +/ entry +/ "desc" in
-            match get_arch desc_path with
-            | None ->
-                log_warning "No ARCH in %s" desc_path
-            | Some arch ->
-                let machine = Support.System.canonical_machine arch in
-                match try_cleanup_distro_version_warn version package_name with
-                | None -> ()
-                | Some version ->
-                    let machine = Arch.none_if_star machine in
-                    let quick_test = Some (desc_path, Exists) in
-                    self#add_package_implementation ~package_state:`installed ~version ~machine ~quick_test ~distro_name query
-*)
-(*
-      method! private get_package_impls query =
-        match query.package_name with
-        | "openjdk-6-jre" | "openjdk-6-jdk" -> self#find_java "1.6" "6" query
-        | "openjdk-7-jre" | "openjdk-7-jdk" -> self#find_java "1.7" "7" query
-        | "gnupg" -> self#find_program "/usr/local/bin/gpg" query
-        | "gnupg2" -> self#find_program "/usr/local/bin/gpg2" query
-        | _ -> super#get_package_impls query
-
-      method private find_program main query =
-        config.system#stat main |> if_some (fun info ->
-          let x_ok = try Unix.access main [Unix.X_OK]; true with Unix.Unix_error _ -> false in
-          if x_ok then (
-            try_cleanup_distro_version_warn (get_version main) query.package_name |> if_some (fun version ->
-              self#add_package_implementation
-                ~main
-                ~package_state:`installed
-                ~version
-                ~machine:(Some config.system#platform.Platform.machine)
-                ~quick_test:(Some (main, UnchangedSince info.Unix.st_mtime))
-                ~distro_name
-                query
-            )
-          )
-        )
-
-*)
-    end
-
-end
+        ["brew"; "which"; query.package_name] |> U.check_output_strs config.system ~stderr:(`Stdout) (fun line ->
+          log_debug "brew which output: '%s'" line;
+          if (String.length line) > 0 then (
+            match Str.bounded_split_delim (Str.regexp_string ": ") line 2 with
+            | [package; version] ->
+                (* TODO assert package == query.package_name *)
+                log_debug "Adding implementation for package: %s, version: %s" package version;
+                (* TODO what should machine be? *)
+                (* let machine = Some machine in *)
+                (* let machine = Support.System.canonical_machine None in *)
+                (* let machine = None in *)
+                let machine = Some config.system#platform.Platform.machine in
+                try_cleanup_distro_version_warn version query.package_name |> if_some (fun version ->
+                  self#add_package_implementation
+                    ~main:"" (* TODO what goes here? *)
+                    ~package_state:`installed
+                    ~version
+                    ~machine
+                    ~quick_test:None
+                    ~distro_name
+                    query
+                )
+            | _ -> log_warning "Invalid output from 'brew': %s" line
+          );
+          ()
+        );
+    end (* homebrew distro object *)
+end (* module Mac *)
 
 module Win = struct
   let windows_distribution config =
