@@ -91,6 +91,8 @@ let src_dir = Filename.dirname ocaml_dir
 let tests_dir = ocaml_dir +/ "tests"
 let test_0install = U.realpath real_system (build_dir +/ "0install")
 
+(** fake_system lets tests mock OS facilities.
+ * There are methods to control what goes through to the underlying OS and what doesn't. *)
 class fake_system tmpdir =
   let extra_files : dentry StringMap.t ref = ref StringMap.empty in
   let hidden_files = ref StringSet.empty in
