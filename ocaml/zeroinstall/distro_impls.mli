@@ -38,4 +38,5 @@ end
 module Mac : sig
   val macports_distribution : ?macports_db:Support.Common.filepath -> General.config -> Distro.distribution
   val darwin_distribution : General.config -> Distro.distribution
+  val homebrew_distribution : General.config -> Distro.distribution
 end
