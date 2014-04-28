@@ -32,6 +32,7 @@ let test_feed = "<?xml version='1.0'?>\n\
 \n\
   <package-implementation distributions='MacPorts' main='/opt/local/bin/python2.7' package='python27'/>\n\
 </interface>"
+(* TODO Should there be a line for homebrew? *)
 
 let test_gobject_feed = "<?xml version='1.0'?>\n\
 <interface xmlns='http://zero-install.sourceforge.net/2004/injector/interface' uri='http://repo.roscidus.com/python/python-gobject'>\n\
@@ -174,6 +175,28 @@ let suite = "distro">::: [
     | impls -> assert_failure @@ Printf.sprintf "want 1, got %d" (List.length impls) end;
 
     Unix.putenv "PATH" old_path;
+  );
+
+  (* "homebrew">:: Fake_system.with_fake_config (fun (config, fake_system) -> *)
+  "homebrew">:: Fake_system.with_fake_config (fun (_config, _fake_system) ->
+    skip_if (Sys.os_type = "Win32") "Paths get messed up on Windows"; (* TODO needed? *)
+    let config = Config.get_default_config (real_system :> system) Fake_system.test_0install in
+    let distro = Distro_impls.Mac.homebrew_distribution config in
+
+    (* let x = 1 in *)
+    (* let sel = "git" in *)
+    (* assert_failure @@ Printf.sprintf "MOOOO %d %b" x (Distro.is_installed config distro sel) *)
+
+    (* assert_failure @@ Printf.sprintf "MOOOO %d %b" x (Distro.is_installed config distro sel) *)
+
+    (* printf "%s" (distro#get_impls_for_feed (make_test_feed "zeroinstall-injector") |> to_impl_list); *)
+    begin match distro#get_impls_for_feed (make_test_feed "zeroinstall-injector") |> to_impl_list with
+    | [impl] ->
+        log_debug "trace5 id: %s" (F.get_attr_ex "id" impl);
+        assert_str_equal "package:homebrew:zeroinstall-injector:1.0-0:*" @@ F.get_attr_ex "id" impl;
+        assert_str_equal "1.0-0" @@ F.get_attr_ex "version" impl;
+        assert_equal None @@ impl.F.machine
+    | impls -> assert_failure @@ Printf.sprintf "want 1, got %d" (List.length impls) end;
   );
 
   "test_host_python">:: Fake_system.with_tmpdir (fun tmpdir ->
