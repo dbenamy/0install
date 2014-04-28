@@ -59,7 +59,7 @@ val check_output :
       let system = whatever in
       printf "Files in this dir:\n";
       ["ls"; "-1"] |> check_output_strs system (fun line ->
-        printf "%s" line;
+        printf "%s\n" line;
       ); *)
 (* TODO make more things use this instead of check_output to DRY up reading from channel & catching End_of_file *)
 val check_output_strs :
