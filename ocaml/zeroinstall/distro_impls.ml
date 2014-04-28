@@ -482,7 +482,7 @@ module Mac = struct
 
       val! system_paths = ["/opt/local/bin"]
       val darwin = darwin_distribution config
-      val check_host_python = false     (* Darwin will do it. How? Where does it call darwin_distribution? *)
+      val check_host_python = false     (* Darwin will do it. How? Where is this connected to darwin_distribution? *)
 
       val distro_name = "MacPorts"
       val id_prefix = "package:macports"
@@ -551,7 +551,7 @@ module Mac = struct
   let homebrew_distribution config =
     object (self : #distribution)
       inherit Distro.distribution config as super (* does this inherit darwin? *)
-      (* I want something like this: inherit darwin_distribution config as super *)
+      (* TODO I want something like: inherit darwin_distribution config as super *)
 
       val distro_name = "Homebrew"
       val id_prefix = "package:homebrew"
