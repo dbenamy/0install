@@ -50,6 +50,24 @@ val check_output :
   ?reaper:(int -> unit) ->
   Common.system -> (in_channel -> 'a) -> string list -> 'a
 
+(** Run a command, pass the output line by line to 'fn', and raise an exception if child process doesn't exit cleanly.
+    @arg env (optional) TODO
+    @arg stderr (optional) Can be `Stdout to send to the child's stdout, which will come to this process. Can be a `FD
+                to send it somewhere else.
+    @arg reaper (optional) TODO
+    Useless example:
+      let system = whatever in
+      printf "Files in this dir:\n";
+      ["ls"; "-1"] |> check_output_strs system (fun line ->
+        printf "%s" line;
+      ); *)
+(* TODO make more things use this instead of check_output to DRY up reading from channel & catching End_of_file *)
+val check_output_strs :
+  ?env:string array ->
+  ?stderr:[< `FD of Unix.file_descr | `Stdout] ->
+  ?reaper:(int -> unit) ->
+  Common.system -> (string -> unit) -> string list -> unit
+
 (** Read up to [n] bytes from [ch] (less if we hit end-of-file. *)
 val read_upto : int -> in_channel -> string
 val is_dir : < stat : Common.filepath -> Unix.stats option; .. > -> Common.filepath -> bool

@@ -259,6 +259,19 @@ let check_output ?env ?stderr ?reaper (system:system) fn (argv:string list) =
       let cmd = Logging.format_argv_for_logging argv in
       reraise_with_context ex "... trying to read output of: %s" cmd
 
+let check_output_strs ?env ?stderr ?reaper (system:system) fn (argv:string list) =
+  (* TOOD Pass through option args. I'm having trouble figuring out how to do it right. *)
+  argv |> check_output system (fun ch ->
+    try
+      while true do
+        let line = input_line ch in
+        log_debug "Got line from child process: '%s'" line;
+        fn line;
+        ()
+      done
+    with End_of_file -> ()
+  )
+
 let split_pair re str =
   match Str.bounded_split_delim re str 2 with
   | [key; value] -> (key, value)
