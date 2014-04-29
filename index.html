@@ -34,15 +34,17 @@
 
 <ul>
 <li>One package works on OS X, most Linux distros, Windows, and more.</li>
-<li>You get automatic updates on all platforms.</li>
-<li>You can release software and updates immediately. There's no delay getting into any central repo.</li>
-</ul><hr><p>0install can install and run programs from the command line, like any good package manager.</p>
+<li>Get automatic updates on all platforms.</li>
+<li>Release software and updates immediately. There's no delay getting into any central repo.</li>
+</ul><hr><p>0install can install programs from built in catalogs, or from any site.</p>
 
-<div class="highlight highlight-sh"><pre><span class="nv">$ </span>0install add rox-edit http://rox.sourceforge.net/2005/interfaces/Edit
+<div class="highlight highlight-sh"><pre><span class="nv">$ </span>0install add rox-edit
 <span class="nv">$ </span>rox-edit
+<span class="nv">$ </span>0install add http://0install.de/feeds/Audacity.xml <span class="c"># no central repo needed</span>
+<span class="nv">$ </span>audacity
 </pre></div>
 
-<p>TODO It'd be nice if packages had a default name so users didn't have to bother with them in the common case. Just like I can "brew install git" and then run "git", I should be able to "0install add <a href="http://git-scm.com/downloads/0install/git.xml">http://git-scm.com/downloads/0install/git.xml</a>" and run "git". The only reason to specify the name should be when doing unusual things, like multiple versions or conflicting packages. An option like "--name=git1.9" might work for those cases.</p>
+<p>TODO This assumes support for short names is ported from the windows version to everywhere.</p>
 
 <hr><p>There's also a GUI.</p>
 
@@ -134,9 +136,9 @@ SCons is a software construction tool (build tool substitute for Make)
 <hr><p>There's lots more good stuff under the hood.</p>
 
 <ul>
-<li>Users can try new versions without removing the old.</li>
-<li>Users can install programs without admin access.</li>
-<li>0install works for source and binary releases (although source releases need one more step to install).</li>
+<li>There are no side effects: libraries never conflict and you can install multiple versions of a program.</li>
+<li>0install can install programs without admin access.</li>
+<li>0install works with source and binary releases (although source releases need one more step to install).</li>
 <li>0install will use dependencies installed by many other packaging systems, including rpm, apt, and homebrew.</li>
 <li>We're working on a security sandbox so users can use programs without giving them access to everything the user can access.</li>
 </ul><h1>
@@ -154,7 +156,11 @@ SCons is a software construction tool (build tool substitute for Make)
 </ul><h1>
 <a name="packaging-other-kinds-of-programs" class="anchor" href="#packaging-other-kinds-of-programs"><span class="octicon octicon-link"></span></a>Packaging Other Kinds of Programs</h1>
 
-<p>TODO</p>
+<p>TODO something that gets built</p>
+
+<p>TODO from a .deb or .rpm</p>
+
+<p>TODO others?</p>
 
 <h1>
 <a name="more-info" class="anchor" href="#more-info"><span class="octicon octicon-link"></span></a>More Info</h1>
