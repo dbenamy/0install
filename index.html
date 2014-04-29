@@ -38,9 +38,9 @@
 <li>You can release software and updates immediately. There's no delay getting into any central repo.</li>
 </ul><hr><p>0install can install and run programs from the command line, like any good package manager.</p>
 
-<pre><code>$ 0install add rox-edit http://rox.sourceforge.net/2005/interfaces/Edit
-$ rox-edit
-</code></pre>
+<div class="highlight highlight-sh"><pre><span class="nv">$ </span>0install add rox-edit http://rox.sourceforge.net/2005/interfaces/Edit
+<span class="nv">$ </span>rox-edit
+</pre></div>
 
 <p>TODO It'd be nice if packages had a default name so users didn't have to bother with them in the common case. Just like I can "brew install git" and then run "git", I should be able to "0install add <a href="http://git-scm.com/downloads/0install/git.xml">http://git-scm.com/downloads/0install/git.xml</a>" and run "git". The only reason to specify the name should be when doing unusual things, like multiple versions or conflicting packages. An option like "--name=git1.9" might work for those cases.</p>
 
@@ -82,49 +82,51 @@ SCons is a software construction tool (build tool substitute for Make)
 
 <p>Save to the prefilled temp file, and exit your editor.</p>
 
-<pre><code>
-$ 0publish Scons.xml \
-  --set-version=0.96.92 \
-  --stable \ # if this is a stable release (the default is testing)
-  --set-released=today \
-  --archive-url=http://heanet.dl.sourceforge.net/sourceforge/scons/scons-local-0.96.92.tar.gz
-</code></pre>
+<div class="highlight highlight-sh"><pre><span class="nv">$ </span>0publish Scons.xml <span class="se">\</span>
+  --set-version<span class="o">=</span>0.96.92 <span class="se">\</span>
+  --stable <span class="se">\ </span><span class="c"># if this is a stable release (the default is testing)</span>
+  --set-released<span class="o">=</span>today <span class="se">\</span>
+  --archive-url<span class="o">=</span>http://heanet.dl.sourceforge.net/sourceforge/scons/scons-local-0.96.92.tar.gz
+</pre></div>
 
 <p>Decide where you'll put the package. Programs will depend on this so it should be somewhere that won't change. You might put it on your site, like <a href="https://example.com/0install/SCons.xml">https://example.com/0install/SCons.xml</a>, or you might keep it in revisions control, like:</p>
 
-<pre><code>$ export PACKAGE_URL=https://github.com/scons/scons/master/Scons.xml
-$ 0publish Scons.xml --set-interface-uri="$PACKAGE_URL"
+<div class="highlight highlight-sh"><pre><span class="nv">$ </span><span class="nb">export </span><span class="nv">PACKAGE_URL</span><span class="o">=</span>https://github.com/scons/scons/master/Scons.xml
+<span class="nv">$ </span>0publish Scons.xml --set-interface-uri<span class="o">=</span><span class="s2">"$PACKAGE_URL"</span>
 
-$ gpg --gen-key # if you don't have one. You just need name and email address.
-$ 0publish SCons.xml --xmlsign
-</code></pre>
+<span class="nv">$ </span>gpg --gen-key <span class="c"># if you don't have one. You just need name and email address.</span>
+<span class="nv">$ </span>0publish SCons.xml --xmlsign
+</pre></div>
 
 <p>Finally, upload or push SCons.xml and your GPG public key to the same directory.</p>
 
 <p>All done! Now anyone can run it:</p>
 
-<pre><code>$ 0install add my-cool-scons $PACKAGE_URL
-$ my-cool-scons --version
-</code></pre>
+<div class="highlight highlight-sh"><pre><span class="nv">$ </span>0install add my-cool-scons <span class="nv">$PACKAGE_URL</span>
+<span class="nv">$ </span>my-cool-scons --version
+</pre></div>
 
-<p>If you want to make manual changes to the package, use
-<code>0publish Scons.xml --edit</code>
-which will validate and re-sign the file when you save.</p>
+<p>If you want to make manual changes to the package, use</p>
+
+<div class="highlight highlight-sh"><pre>0publish Scons.xml --edit
+</pre></div>
+
+<p>which will validate and re-sign the file when you save.</p>
 
 <p>When you release a new version:</p>
 
-<pre><code>$ 0publish SCons.xml \
-  --add-version=1.0 \ # instead of --set-version above
-  --stable \ # or not
-  --set-released=today \
-  --archive-url=http://heanet.dl.sourceforge.net/sourceforge/scons/scons-local-1.0.tar.gz
-</code></pre>
+<div class="highlight highlight-sh"><pre><span class="nv">$ </span>0publish SCons.xml <span class="se">\</span>
+  --add-version<span class="o">=</span>1.0 <span class="se">\ </span><span class="c"># instead of --set-version above</span>
+  --stable <span class="se">\ </span><span class="c"># or not</span>
+  --set-released<span class="o">=</span>today <span class="se">\</span>
+  --archive-url<span class="o">=</span>http://heanet.dl.sourceforge.net/sourceforge/scons/scons-local-1.0.tar.gz
+</pre></div>
 
 <hr><p>There's also a gui for creating packages.</p>
 
-<pre><code>$ 0install add 0publish-gui http://0install.net/2007/interfaces/0publish-gui.xml
-$ 0publish-gui
-</code></pre>
+<div class="highlight highlight-sh"><pre><span class="nv">$ </span>0install add 0publish-gui http://0install.net/2007/interfaces/0publish-gui.xml
+<span class="nv">$ </span>0publish-gui
+</pre></div>
 
 <p>TODO replace with screenshots of gui-only workflow.</p>
 
