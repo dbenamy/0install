@@ -1,0 +1,162 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>0install by dbenamy</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="javascripts/scale.fix.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>0install</h1>
+        <p>One package for every OS</p>
+        <p class="view"><a href="https://github.com/dbenamy/0install">View the Project on GitHub <small>dbenamy/0install</small></a></p>
+        <ul>
+          <li><a href="https://github.com/dbenamy/0install/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/dbenamy/0install/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/dbenamy/0install">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>
+<a name="0install" class="anchor" href="#0install"><span class="octicon octicon-link"></span></a>0install</h1>
+
+<p>0install is the last package manager you'll ever need:</p>
+
+<ul>
+<li>One package works on OS X, many Linux distros, Windows, and more.</li>
+<li>You get automatic updates on all platforms.</li>
+<li>You can release software and updates immediately. There's no delay getting into any central repo.</li>
+</ul><hr><p>0install can install and run programs from the command line, like any good package manager.</p>
+
+<pre><code>$ 0install add rox-edit http://rox.sourceforge.net/2005/interfaces/Edit
+$ rox-edit
+</code></pre>
+
+<p>TODO Packages should have a default name so users don't have to bother with them in the common case. Just like I can "brew install git" and then run "git", I should be able to "0install add <a href="http://git-scm.com/downloads/0install/git.xml">http://git-scm.com/downloads/0install/git.xml</a>" and run "git". The only reason to specify the name should be when doing advanced and unusual things, like multiple versions or conflicting packages. An option like "--name=git1.9" would work for those cases.</p>
+
+<hr><p>There's also a gui.
+TODO screenshots from <a href="http://0install.net/user-guide-shortcuts.html">http://0install.net/user-guide-shortcuts.html</a>.</p>
+
+<p>TODO The command line and gui worlds should be unified if they're not. "0install add" and AddApp should both set up gui shortcuts and add the program to $PATH by default. Otherwise we have to explain the difference and some people will be confused.</p>
+
+<hr><p>0install puts everything in /var/cache/0install.net/, other than the launch scripts and desktop shortcuts. It won't step on any of your other software or interfere with any other package manager.</p>
+
+<hr><p>It's easy to create your own 0install packages. Let's package SCons, a build system written in python.</p>
+
+<pre><code>$ 0install add 0publish http://0install.net/2006/interfaces/0publish
+$ export EDITOR=nano # if your EDITOR environment variable isn't already set.
+$ 0publish SCons.xml # The file name shouldn't have a version number.
+</code></pre>
+
+<p>Type "Y" to create the file. It should open in your editor. Fill in the summary, description, homepage, and the main program (in this case, scons.py). The final version should look like:</p>
+
+<pre><code>&lt;?xml version="1.0" ?&gt;
+&lt;?xml-stylesheet type='text/xsl' href='http://0install.net/2006/stylesheets/interface.xsl'?&gt;
+
+&lt;interface xmlns="http://zero-install.sourceforge.net/2004/injector/interface"&gt;
+  &lt;name&gt;SCons&lt;/name&gt;
+  &lt;summary&gt;a software construction tool&lt;/summary&gt;
+  &lt;description&gt;
+SCons is a software construction tool (build tool substitute for Make)
+...
+  &lt;/description&gt;
+  &lt;homepage&gt;http://www.scons.org/&lt;/homepage&gt;
+  &lt;group main="scons.py"&gt;
+    &lt;implementation id="." version="0.1" released='Snapshot'/&gt;
+  &lt;/group&gt;
+&lt;/interface&gt;
+</code></pre>
+
+<p>Save to the prefilled temp file, and exit your editor.</p>
+
+<pre><code>
+$ 0publish Scons.xml \
+  --set-version=0.96.92 \
+  --stable \ # if this is a stable release (the default is testing)
+  --set-released=today \
+  --archive-url=http://heanet.dl.sourceforge.net/sourceforge/scons/scons-local-0.96.92.tar.gz
+
+$ export URL_WHERE_YOULL_PUT_PACKAGE=https://example.com/0install/SCons.xml # or maybe
+$ export URL_WHERE_YOULL_PUT_PACKAGE=https://github.com/scons/scons/master/Scons.xml # programs will depend on this so put it somewhere that won't change
+$ 0publish Scons.xml --set-interface-uri="$URL_WHERE_YOULL_PUT_PACKAGE"
+
+$ gpg --gen-key # if you don't have one. Just enter name and email address.
+$ 0publish SCons.xml --xmlsign
+</code></pre>
+
+<p>Finally, upload or push SCons.xml and your GPG public key to the same directory.</p>
+
+<p>Now anyone can run it!</p>
+
+<pre><code>$ 0install add my-cool-scons $URL_WHERE_YOULL_PUT_PACKAGE
+$ my-cool-scons --version
+</code></pre>
+
+<p>If you want to make manual changes to the package, use <code>0publish Scons.xml --edit</code> which will validate and re-sign the file when you save.</p>
+
+<p>To add another version:</p>
+
+<pre><code>$ 0publish SCons.xml \
+  --add-version=1.0 \ # instead of --set-version above
+  --stable \ # or not
+  --set-released=today \
+  --archive-url=http://heanet.dl.sourceforge.net/sourceforge/scons/scons-local-1.0.tar.gz
+</code></pre>
+
+<hr><p>There's also a gui for creating packages.</p>
+
+<pre><code>$ 0install add 0publish-gui http://0install.net/2007/interfaces/0publish-gui.xml
+$ 0publish-gui
+</code></pre>
+
+<p>TODO replace with screenshots of gui-only workflow.</p>
+
+<hr><p>There's lots more good stuff under the hood.</p>
+
+<ul>
+<li>Users can try new versions without removing the old.</li>
+<li>Users can install programs without admin access.</li>
+<li>0install works for source and binary releases, although source releases need one more step to install.</li>
+<li>0install will use dependencies installed by many other packaging systems, including rpm, apt, and homebrew.</li>
+<li>We're working on a security sandbox so users can use programs without giving them access to everything the user can access.</li>
+</ul><h1>
+<a name="install" class="anchor" href="#install"><span class="octicon octicon-link"></span></a>Install</h1>
+
+<ul>
+<li>OS X: <code>brew update &amp;&amp; brew install 0install</code>
+</li>
+<li>Debian / Ubuntu / Mint: <code>sudo apt-get install zeroinstall-injector</code>
+</li>
+<li>Fedora: <code>sudo yum install 0install</code>
+</li>
+<li><a href="http://downloads.sourceforge.net/project/zero-install/0install/1.14/zero-install-1.14.2.exe">Windows</a></li>
+<li><a href="http://0install.net/injector.html">And more</a></li>
+</ul><h1>
+<a name="packaging-other-kinds-of-programs" class="anchor" href="#packaging-other-kinds-of-programs"><span class="octicon octicon-link"></span></a>Packaging Other Kinds of Programs</h1>
+
+<p>TODO</p>
+
+<h1>
+<a name="more-info" class="anchor" href="#more-info"><span class="octicon octicon-link"></span></a>More Info</h1>
+
+<p><a href="http://0install.net/doc.html">0install Site</a></p>
+      </section>
+    </div>
+    <footer>
+      <p>Project maintained by <a href="https://github.com/dbenamy">dbenamy</a></p>
+      <p>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></p>
+    </footer>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+    
+  </body>
+</html>
