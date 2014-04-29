@@ -1,39 +1,43 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
+
   <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <title>0install by dbenamy</title>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="0install : One package for every OS" />
 
-    <link rel="stylesheet" href="stylesheets/styles.css">
-    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
-    <script src="javascripts/scale.fix.js"></script>
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
 
-    <!--[if lt IE 9]>
-    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
+    <title>0install</title>
   </head>
+
   <body>
-    <div class="wrapper">
-      <header>
-        <h1>0install</h1>
-        <p>One package for every OS</p>
-        <p class="view"><a href="https://github.com/dbenamy/0install">View the Project on GitHub <small>dbenamy/0install</small></a></p>
-        <ul>
-          <li><a href="https://github.com/dbenamy/0install/zipball/master">Download <strong>ZIP File</strong></a></li>
-          <li><a href="https://github.com/dbenamy/0install/tarball/master">Download <strong>TAR Ball</strong></a></li>
-          <li><a href="https://github.com/dbenamy/0install">View On <strong>GitHub</strong></a></li>
-        </ul>
-      </header>
-      <section>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/dbenamy/0install">View on GitHub</a>
+
+          <h1 id="project_title">0install</h1>
+          <h2 id="project_tagline">One package for every OS</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/dbenamy/0install/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/dbenamy/0install/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
         <h1>
 <a name="0install" class="anchor" href="#0install"><span class="octicon octicon-link"></span></a>0install</h1>
 
 <p>0install is the last package manager you'll ever need:</p>
 
 <ul>
-<li>One package works on OS X, many Linux distros, Windows, and more.</li>
+<li>One package works on OS X, most Linux distros, Windows, and more.</li>
 <li>You get automatic updates on all platforms.</li>
 <li>You can release software and updates immediately. There's no delay getting into any central repo.</li>
 </ul><hr><p>0install can install and run programs from the command line, like any good package manager.</p>
@@ -42,12 +46,12 @@
 $ rox-edit
 </code></pre>
 
-<p>TODO Packages should have a default name so users don't have to bother with them in the common case. Just like I can "brew install git" and then run "git", I should be able to "0install add <a href="http://git-scm.com/downloads/0install/git.xml">http://git-scm.com/downloads/0install/git.xml</a>" and run "git". The only reason to specify the name should be when doing advanced and unusual things, like multiple versions or conflicting packages. An option like "--name=git1.9" would work for those cases.</p>
+<p>TODO It'd be nice if packages had a default name so users didn't have to bother with them in the common case. Just like I can "brew install git" and then run "git", I should be able to "0install add <a href="http://git-scm.com/downloads/0install/git.xml">http://git-scm.com/downloads/0install/git.xml</a>" and run "git". The only reason to specify the name should be when doing unusual things, like multiple versions or conflicting packages. An option like "--name=git1.9" might work for those cases.</p>
 
 <hr><p>There's also a gui.
 TODO screenshots from <a href="http://0install.net/user-guide-shortcuts.html">http://0install.net/user-guide-shortcuts.html</a>.</p>
 
-<p>TODO The command line and gui worlds should be unified if they're not. "0install add" and AddApp should both set up gui shortcuts and add the program to $PATH by default. Otherwise we have to explain the difference and some people will be confused.</p>
+<p>TODO I think that the command line and gui worlds should be unified if they're not. "0install add", AddApp, and the gui manager should all set up gui shortcuts and add the program to $PATH by default. If not, we have to explain the differences and I bet people will be confused. Hell, I'd be confused :-)</p>
 
 <hr><p>0install puts everything in /var/cache/0install.net/, other than the launch scripts and desktop shortcuts. It won't step on any of your other software or interfere with any other package manager.</p>
 
@@ -152,11 +156,16 @@ $ 0publish-gui
 <p><a href="http://0install.net/doc.html">0install Site</a></p>
       </section>
     </div>
-    <footer>
-      <p>Project maintained by <a href="https://github.com/dbenamy">dbenamy</a></p>
-      <p>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></p>
-    </footer>
-    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">0install maintained by <a href="https://github.com/dbenamy">dbenamy</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
     
+
   </body>
 </html>
