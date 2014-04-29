@@ -54,14 +54,15 @@
 
 <hr><p>It's easy to create your own 0install packages. Let's package SCons, a build system written in python.</p>
 
-<div class="highlight highlight-sh"><pre><span class="nv">$ </span>0install add 0publish http://0install.net/2006/interfaces/0publish
+<div class="highlight highlight-sh"><pre><span class="nv">$ </span>mkdir 0install-scons <span class="o">&amp;&amp;</span> <span class="nb">cd </span>0install-scons
+<span class="nv">$ </span>0install add 0publish http://0install.net/2006/interfaces/0publish
 <span class="nv">$ </span><span class="nb">export </span><span class="nv">EDITOR</span><span class="o">=</span>nano <span class="c"># if your EDITOR environment variable isn't already set.</span>
 <span class="nv">$ </span>0publish SCons.xml <span class="c"># The file name shouldn't have a version number.</span>
 </pre></div>
 
 <p>TODO We can reduce onboarding friction by making 0publish a subcommand of 0install so they don't have to install something else. I guess the down side is that 0publish gets a little bigger for everyone.</p>
 
-<p>Type "Y" to create the file. It should open in your editor. Fill in the '''summary''', '''description''', '''homepage''', and the '''main''' program (in this case, scons.py). The final version should look like:</p>
+<p>Type "Y" to create the file. It should open in your editor. Fill in the <strong>summary</strong>, <strong>description</strong>, <strong>homepage</strong>, and the <strong>main</strong> program (in this case, scons.py). The final version should look like:</p>
 
 <div class="highlight highlight-xml"><pre><span class="cp">&lt;?xml version="1.0" ?&gt;</span>
 <span class="cp">&lt;?xml-stylesheet type='text/xsl' href='http://0install.net/2006/stylesheets/interface.xsl'?&gt;</span>
