@@ -44,8 +44,9 @@ $ rox-edit
 
 <p>TODO It'd be nice if packages had a default name so users didn't have to bother with them in the common case. Just like I can "brew install git" and then run "git", I should be able to "0install add <a href="http://git-scm.com/downloads/0install/git.xml">http://git-scm.com/downloads/0install/git.xml</a>" and run "git". The only reason to specify the name should be when doing unusual things, like multiple versions or conflicting packages. An option like "--name=git1.9" might work for those cases.</p>
 
-<hr><p>There's also a gui.
-TODO screenshots from <a href="http://0install.net/user-guide-shortcuts.html">http://0install.net/user-guide-shortcuts.html</a>.</p>
+<hr><p>There's also a GUI.</p>
+
+<p>TODO screenshots from <a href="http://0install.net/user-guide-shortcuts.html">http://0install.net/user-guide-shortcuts.html</a>.</p>
 
 <p>TODO I think that the command line and gui worlds should be unified if they're not. "0install add", AddApp, and the gui manager should all set up gui shortcuts and add the program to $PATH by default. If not, we have to explain the differences and I bet people will be confused. Hell, I'd be confused :-)</p>
 
@@ -53,29 +54,31 @@ TODO screenshots from <a href="http://0install.net/user-guide-shortcuts.html">ht
 
 <hr><p>It's easy to create your own 0install packages. Let's package SCons, a build system written in python.</p>
 
-<pre><code>$ 0install add 0publish http://0install.net/2006/interfaces/0publish
-$ export EDITOR=nano # if your EDITOR environment variable isn't already set.
-$ 0publish SCons.xml # The file name shouldn't have a version number.
-</code></pre>
+<div class="highlight highlight-sh"><pre><span class="nv">$ </span>0install add 0publish http://0install.net/2006/interfaces/0publish
+<span class="nv">$ </span><span class="nb">export </span><span class="nv">EDITOR</span><span class="o">=</span>nano <span class="c"># if your EDITOR environment variable isn't already set.</span>
+<span class="nv">$ </span>0publish SCons.xml <span class="c"># The file name shouldn't have a version number.</span>
+</pre></div>
 
-<p>Type "Y" to create the file. It should open in your editor. Fill in the summary, description, homepage, and the main program (in this case, scons.py). The final version should look like:</p>
+<p>TODO We can reduce onboarding friction by making 0publish a subcommand of 0install so they don't have to install something else. I guess the down side is that 0publish gets a little bigger for everyone.</p>
 
-<pre><code>&lt;?xml version="1.0" ?&gt;
-&lt;?xml-stylesheet type='text/xsl' href='http://0install.net/2006/stylesheets/interface.xsl'?&gt;
+<p>Type "Y" to create the file. It should open in your editor. Fill in the '''summary''', '''description''', '''homepage''', and the '''main''' program (in this case, scons.py). The final version should look like:</p>
 
-&lt;interface xmlns="http://zero-install.sourceforge.net/2004/injector/interface"&gt;
-  &lt;name&gt;SCons&lt;/name&gt;
-  &lt;summary&gt;a software construction tool&lt;/summary&gt;
-  &lt;description&gt;
+<div class="highlight highlight-xml"><pre><span class="cp">&lt;?xml version="1.0" ?&gt;</span>
+<span class="cp">&lt;?xml-stylesheet type='text/xsl' href='http://0install.net/2006/stylesheets/interface.xsl'?&gt;</span>
+
+<span class="nt">&lt;interface</span> <span class="na">xmlns=</span><span class="s">"http://zero-install.sourceforge.net/2004/injector/interface"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;name&gt;</span>SCons<span class="nt">&lt;/name&gt;</span>
+  <span class="nt">&lt;summary&gt;</span>a software construction tool<span class="nt">&lt;/summary&gt;</span>
+  <span class="nt">&lt;description&gt;</span>
 SCons is a software construction tool (build tool substitute for Make)
 ...
-  &lt;/description&gt;
-  &lt;homepage&gt;http://www.scons.org/&lt;/homepage&gt;
-  &lt;group main="scons.py"&gt;
-    &lt;implementation id="." version="0.1" released='Snapshot'/&gt;
-  &lt;/group&gt;
-&lt;/interface&gt;
-</code></pre>
+  <span class="nt">&lt;/description&gt;</span>
+  <span class="nt">&lt;homepage&gt;</span>http://www.scons.org/<span class="nt">&lt;/homepage&gt;</span>
+  <span class="nt">&lt;group</span> <span class="na">main=</span><span class="s">"scons.py"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;implementation</span> <span class="na">id=</span><span class="s">"."</span> <span class="na">version=</span><span class="s">"0.1"</span> <span class="na">released=</span><span class="s">'Snapshot'</span><span class="nt">/&gt;</span>
+  <span class="nt">&lt;/group&gt;</span>
+<span class="nt">&lt;/interface&gt;</span>
+</pre></div>
 
 <p>Save to the prefilled temp file, and exit your editor.</p>
 
@@ -85,26 +88,30 @@ $ 0publish Scons.xml \
   --stable \ # if this is a stable release (the default is testing)
   --set-released=today \
   --archive-url=http://heanet.dl.sourceforge.net/sourceforge/scons/scons-local-0.96.92.tar.gz
+</code></pre>
 
-$ export URL_WHERE_YOULL_PUT_PACKAGE=https://example.com/0install/SCons.xml # or maybe
-$ export URL_WHERE_YOULL_PUT_PACKAGE=https://github.com/scons/scons/master/Scons.xml # programs will depend on this so put it somewhere that won't change
-$ 0publish Scons.xml --set-interface-uri="$URL_WHERE_YOULL_PUT_PACKAGE"
+<p>Decide where you'll put the package. Programs will depend on this so it should be somewhere that won't change. You might put it on your site, like <a href="https://example.com/0install/SCons.xml">https://example.com/0install/SCons.xml</a>, or you might keep it in revisions control, like:</p>
 
-$ gpg --gen-key # if you don't have one. Just enter name and email address.
+<pre><code>$ export PACKAGE_URL=https://github.com/scons/scons/master/Scons.xml
+$ 0publish Scons.xml --set-interface-uri="$PACKAGE_URL"
+
+$ gpg --gen-key # if you don't have one. You just need name and email address.
 $ 0publish SCons.xml --xmlsign
 </code></pre>
 
 <p>Finally, upload or push SCons.xml and your GPG public key to the same directory.</p>
 
-<p>Now anyone can run it!</p>
+<p>All done! Now anyone can run it:</p>
 
-<pre><code>$ 0install add my-cool-scons $URL_WHERE_YOULL_PUT_PACKAGE
+<pre><code>$ 0install add my-cool-scons $PACKAGE_URL
 $ my-cool-scons --version
 </code></pre>
 
-<p>If you want to make manual changes to the package, use <code>0publish Scons.xml --edit</code> which will validate and re-sign the file when you save.</p>
+<p>If you want to make manual changes to the package, use
+<code>0publish Scons.xml --edit</code>
+which will validate and re-sign the file when you save.</p>
 
-<p>To add another version:</p>
+<p>When you release a new version:</p>
 
 <pre><code>$ 0publish SCons.xml \
   --add-version=1.0 \ # instead of --set-version above
@@ -126,7 +133,7 @@ $ 0publish-gui
 <ul>
 <li>Users can try new versions without removing the old.</li>
 <li>Users can install programs without admin access.</li>
-<li>0install works for source and binary releases, although source releases need one more step to install.</li>
+<li>0install works for source and binary releases (although source releases need one more step to install).</li>
 <li>0install will use dependencies installed by many other packaging systems, including rpm, apt, and homebrew.</li>
 <li>We're working on a security sandbox so users can use programs without giving them access to everything the user can access.</li>
 </ul><h1>
